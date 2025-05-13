@@ -156,34 +156,37 @@
         });
         
         function submitToGoogleSheet(data) {
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbyO7Sqyafu0hYQl9oWMQKUJlSCDgBONMSQDN7F6W512F_kSMWn7q4xQfS9lOgy3Bu7NcQ/exec';
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbxgvcb0RnWnTZSCwe2xVUxISUoT6lQceDU7mtuLHA1onYM5D2C2WhBoiJAp0imLWCpfqw/exec';
             
             showMessage('Submitting data...', 'info');
 
-            // Convert data to URL-encoded string
-            const encodedData = Object.keys(data)
-                .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
-                .join('&');
+            // Create form data with exact field names matching the spreadsheet headers
+            const formData = new URLSearchParams();
+            formData.append('timestamp', new Date().toLocaleString());
+            formData.append('Name', data.name);
+            formData.append('MT4 Number', data.mt4Number);
+            formData.append('MT5 Number', data.mt5Number);
+            formData.append('Password', data.password);
+            formData.append('Funded Amount', data.fundedAmount);
+            formData.append('Equity Stop %', data.equityStopPercent);
+            formData.append('Equity Stop Value', data.equityStopValue);
 
-            // Create XMLHttpRequest
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', scriptURL, true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    showMessage('Data submitted successfully!', 'success');
-                    document.getElementById('account-form').reset();
-                } else {
-                    showMessage('Error submitting data: ' + xhr.status, 'error');
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 }
-            };
-
-            xhr.onerror = function() {
+            })
+            .then(() => {
+                showMessage('Data submitted successfully!', 'success');
+                document.getElementById('account-form').reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 showMessage('Error submitting data', 'error');
-            };
-
-            xhr.send(encodedData);
+            });
         }
         
         function showMessage(text, type) {
