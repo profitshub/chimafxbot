@@ -156,31 +156,38 @@
         });
         
         function submitToGoogleSheet(data) {
-            // URL of your deployed Google Apps Script web app
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbzN_UmBsU7c6tNjZnABOMlYfdLszMU-U0uJY00hO4z8SymdbR1Ynu9zpZoluRGynsmo-w/exec';
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbynKypGhlr0klB_mT4ruUMWwwj4m41t8hzo4ZVljirLhWq9djEa0aCS0vL6mjH4Lf_4UQ/exec';
             
-            // Show loading message
             showMessage('Submitting data...', 'info');
-            
-            fetch(scriptURL, {
-                method: 'POST',
-                body: JSON.stringify(data),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.result === 'success') {
+
+            // Create the form data
+            const formData = new URLSearchParams();
+            Object.keys(data).forEach(key => {
+                formData.append(key, data[key]);
+            });
+
+            // Send as GET request with parameters
+            const queryString = formData.toString();
+            const fullURL = `${scriptURL}?${queryString}`;
+
+            // Create a temporary iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+
+            // Handle the response
+            window.addEventListener('message', function(event) {
+                if (event.data === 'success') {
                     showMessage('Data submitted successfully!', 'success');
                     document.getElementById('account-form').reset();
-                } else {
-                    showMessage('Error: ' + data.error, 'error');
+                } else if (event.data && event.data.includes('error')) {
+                    showMessage(event.data, 'error');
                 }
-            })
-            .catch(error => {
-                showMessage('Error: ' + error.message, 'error');
-            });
+                document.body.removeChild(iframe);
+            }, false);
+
+            // Load the URL in the iframe
+            iframe.src = fullURL;
         }
         
         function showMessage(text, type) {
