@@ -156,38 +156,34 @@
         });
         
         function submitToGoogleSheet(data) {
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbynKypGhlr0klB_mT4ruUMWwwj4m41t8hzo4ZVljirLhWq9djEa0aCS0vL6mjH4Lf_4UQ/exec';
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbyO7Sqyafu0hYQl9oWMQKUJlSCDgBONMSQDN7F6W512F_kSMWn7q4xQfS9lOgy3Bu7NcQ/exec';
             
             showMessage('Submitting data...', 'info');
 
-            // Create the form data
-            const formData = new URLSearchParams();
-            Object.keys(data).forEach(key => {
-                formData.append(key, data[key]);
-            });
+            // Convert data to URL-encoded string
+            const encodedData = Object.keys(data)
+                .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
+                .join('&');
 
-            // Send as GET request with parameters
-            const queryString = formData.toString();
-            const fullURL = `${scriptURL}?${queryString}`;
+            // Create XMLHttpRequest
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', scriptURL, true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 
-            // Create a temporary iframe
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-
-            // Handle the response
-            window.addEventListener('message', function(event) {
-                if (event.data === 'success') {
+            xhr.onload = function() {
+                if (xhr.status === 200) {
                     showMessage('Data submitted successfully!', 'success');
                     document.getElementById('account-form').reset();
-                } else if (event.data && event.data.includes('error')) {
-                    showMessage(event.data, 'error');
+                } else {
+                    showMessage('Error submitting data: ' + xhr.status, 'error');
                 }
-                document.body.removeChild(iframe);
-            }, false);
+            };
 
-            // Load the URL in the iframe
-            iframe.src = fullURL;
+            xhr.onerror = function() {
+                showMessage('Error submitting data', 'error');
+            };
+
+            xhr.send(encodedData);
         }
         
         function showMessage(text, type) {
