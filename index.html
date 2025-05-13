@@ -1,1 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChimaFX BOT Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 25px;
+            font-style: italic;
+            color: #555;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .thank-you {
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>ChimaFX BOT</h1>
+    <p class="subtitle">Kindly fill the form below, edit it and click on submit</p>
 
+    <form id="account-form">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="mt4-number">MT4 Number:</label>
+            <input type="text" id="mt4-number" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="mt5-number">MT5 Number:</label>
+            <input type="text" id="mt5-number" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">MT4/MT5 Password:</label>
+            <input type="password" id="password" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="funded-amount">Funded Amount:</label>
+            <input type="text" id="funded-amount" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="equity-stop-percent">Equity Stop Out in % of Deposited Amount (between 10-50%):</label>
+            <input type="number" id="equity-stop-percent" min="10" max="50" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="equity-stop-value">Equity Stop Out in Value of Deposited Amount:</label>
+            <input type="text" id="equity-stop-value" required>
+        </div>
+        
+        <button type="submit">Submit</button>
+    </form>
+    
+    <p class="thank-you">Thank you for your cooperation</p>
+    
+    <div id="message" style="display:none;"></div>
+
+    <script>
+        document.getElementById('account-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const mt4Number = document.getElementById('mt4-number').value;
+            const mt5Number = document.getElementById('mt5-number').value;
+            const password = document.getElementById('password').value;
+            const fundedAmount = document.getElementById('funded-amount').value;
+            const equityStopPercent = document.getElementById('equity-stop-percent').value;
+            const equityStopValue = document.getElementById('equity-stop-value').value;
+            
+            // Create the data object
+            const data = {
+                name,
+                mt4Number,
+                mt5Number,
+                password,
+                fundedAmount,
+                equityStopPercent,
+                equityStopValue
+            };
+            
+            // Send to Google Apps Script
+            submitToGoogleSheet(data);
+        });
+        
+        function submitToGoogleSheet(data) {
+            // URL of your deployed Google Apps Script web app
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzN_UmBsU7c6tNjZnABOMlYfdLszMU-U0uJY00hO4z8SymdbR1Ynu9zpZoluRGynsmo-w/exec';
+            
+            // Show loading message
+            showMessage('Submitting data...', 'info');
+            
+            fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.result === 'success') {
+                    showMessage('Data submitted successfully!', 'success');
+                    document.getElementById('account-form').reset();
+                } else {
+                    showMessage('Error: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error.message, 'error');
+            });
+        }
+        
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = type;
+            messageDiv.style.display = 'block';
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
